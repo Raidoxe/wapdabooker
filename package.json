@@ -1,0 +1,19 @@
+{
+  "name": "pda-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "Oliver HUth",
+  "license": "ISC",
+  "dependencies": {
+    "date-and-time": "^2.1.1",
+    "puppeteer": "^13.1.3"
+  },
+  "devDependencies": {
+    "@types/puppeteer": "^5.4.4"
+  }
+}
