@@ -1,0 +1,9 @@
+Cannington=CAN
+Joondalup=JNP
+Kelmscott=KELM
+Rockingham=ROCK
+SUCCESS=SUC
+Mirrabooka=MBK
+Midland=MID
+West Perth=CTYW
+Mandurah=MDH

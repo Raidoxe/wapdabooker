@@ -37,15 +37,47 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 exports.__esModule = true;
 var date = require('date-and-time');
-var rangeTop = date.parse('12/06/2022 6:00 PM', 'DD/MM/YYYY h:mm A');
-var rangeBottom = date.parse('07/06/2022 9:00 AM', 'DD/MM/YYYY h:mm A');
+var yargs = require('yargs/yargs');
 var puppeteer = require('puppeteer');
+var hideBin = require('yargs/helpers').hideBin;
+var args = yargs(hideBin(process.argv)).option('licenceNum', {
+    alias: 'l',
+    description: 'Drivers Licence number',
+    type: 'string'
+}).option('expiryDate', {
+    alias: 'e',
+    description: 'Drivers Licence expiry date',
+    type: 'string'
+}).option('firstName', {
+    alias: 'f',
+    description: 'Drivers First name',
+    type: 'string'
+}).option('lastName', {
+    description: 'Drivers Last name',
+    type: 'string'
+}).option('dateOfBirth', {
+    alias: 'd',
+    description: 'Drivers date of birth',
+    type: 'string'
+}).option('dateTop', {
+    description: 'Preffered highest date',
+    type: 'string'
+}).option('dateBottom', {
+    description: 'Preffered lowest date',
+    type: 'string'
+}).option('location', {
+    description: 'Preffered spot/location for driving test',
+    type: 'string'
+}).argv;
+var rangeTop = date.parse(args.dateTop + " 6:00 PM", 'DD/MM/YYYY h:mm A');
+var rangeBottom = date.parse(args.dateBottom + " 6:00 AM", 'DD/MM/YYYY h:mm A');
+//const args: Array<string> = process.argv.slice(2);
 var userInfo = {
-    licenceNumber: '8147835',
-    expiryDate: '09/06/2024',
-    firstName: 'Samora',
-    lastName: 'Wa Azaro',
-    dateOfBirth: '21/03/2005'
+    licenceNumber: args.licenceNum,
+    expiryDate: args.expiryDate,
+    firstName: args.firstName,
+    lastName: args.lastName,
+    dateOfBirth: args.dateOfBirth
 };
 (function () { return __awaiter(void 0, void 0, void 0, function () {
     function bookDate(listNumber) {
@@ -109,7 +141,7 @@ var userInfo = {
                     ])];
             case 11:
                 availableBookingsPageResponse = (_a.sent())[0];
-                return [4 /*yield*/, page.select('select', 'KELM')];
+                return [4 /*yield*/, page.select('select', args.location)];
             case 12:
                 _a.sent();
                 repeater = setInterval(function () { return __awaiter(void 0, void 0, void 0, function () {

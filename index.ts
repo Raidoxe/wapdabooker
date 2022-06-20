@@ -1,17 +1,62 @@
 import { ElementHandle } from "puppeteer";
 const date = require('date-and-time');
-
-const rangeTop = date.parse('12/06/2022 6:00 PM', 'DD/MM/YYYY h:mm A');
-const rangeBottom = date.parse('07/06/2022 9:00 AM', 'DD/MM/YYYY h:mm A');
+const yargs = require('yargs/yargs')
 
 const puppeteer =  require('puppeteer');
 
+const { hideBin } = require('yargs/helpers')
+
+const args = yargs(hideBin(process.argv)).option('licenceNum', {
+    alias: 'l',
+    description: 'Drivers Licence number',
+    type: 'string'
+}).option('expiryDate', {
+    alias: 'e',
+    description: 'Drivers Licence expiry date',
+    type: 'string'
+}).option('firstName', {
+    alias: 'f',
+    description: 'Drivers First name',
+    type: 'string'
+}).option('lastName', {
+    description: 'Drivers Last name',
+    type: 'string'
+}).option('dateOfBirth', {
+    alias: 'd',
+    description: 'Drivers date of birth',
+    type: 'string'
+}).option('dateTop', { //highest preffered date (e.g. 23/02/2005)
+    description: 'Preffered highest date',
+    type: 'string'
+}).option('dateBottom', { //lowest preffered date (e.g. 01/02/2005)
+    description: 'Preffered lowest date',
+    type: 'string'
+}).option('location', {
+    description: 'Preffered spot/location for driving test',
+    type: 'string'
+}).argv
+
+const rangeTop = date.parse(`${args.dateTop} 6:00 PM`, 'DD/MM/YYYY h:mm A');
+const rangeBottom = date.parse(`${args.dateBottom} 6:00 AM`, 'DD/MM/YYYY h:mm A');
+
+
+
+
+
+
+
+//const args: Array<string> = process.argv.slice(2);
+
+
+
+
+
 const userInfo = {
-    licenceNumber: '8147835',
-    expiryDate: '09/06/2024',
-    firstName: 'Samora',
-    lastName: 'Wa Azaro',
-    dateOfBirth: '21/03/2005'
+    licenceNumber: args.licenceNum,
+    expiryDate: args.expiryDate,
+    firstName: args.firstName,
+    lastName: args.lastName,
+    dateOfBirth: args.dateOfBirth
 };
 
 (
@@ -50,12 +95,17 @@ const userInfo = {
             page.click('[title="Search for available bookings"]')
         ])
 
-        await page.select('select', 'KELM');
+        await page.select('select', args.location);
         /* 
         <option value="CAN">Cannington</option>
         <option value="JNP">Joondalup</option>
         <option value="KELM">Kelmscott</option>
         <option value="ROCK">Rockingham</option>
+        SUCCESS=SUC
+        Mirrabooka=MBK
+        Midland=MID
+        West Perth = CTYW
+        Mandurah=MDH
         */
 
         const repeater = setInterval(async () => {
