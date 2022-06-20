@@ -40,15 +40,7 @@ const rangeTop = date.parse(`${args.dateTop} 6:00 PM`, 'DD/MM/YYYY h:mm A');
 const rangeBottom = date.parse(`${args.dateBottom} 6:00 AM`, 'DD/MM/YYYY h:mm A');
 
 
-
-
-
-
-
 //const args: Array<string> = process.argv.slice(2);
-
-
-
 
 
 const userInfo = {
@@ -58,6 +50,10 @@ const userInfo = {
     lastName: args.lastName,
     dateOfBirth: args.dateOfBirth
 };
+
+console.log('Booking test for:');
+console.log(userInfo);
+console.log(`At location ${args.location}`);
 
 (
     async () => {

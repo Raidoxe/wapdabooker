@@ -79,6 +79,9 @@ var userInfo = {
     lastName: args.lastName,
     dateOfBirth: args.dateOfBirth
 };
+console.log('Booking test for:');
+console.log(userInfo);
+console.log("At location " + args.location);
 (function () { return __awaiter(void 0, void 0, void 0, function () {
     function bookDate(listNumber) {
         page.click("#searchResultRadio" + listNumber).then(function () {
