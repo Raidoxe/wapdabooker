@@ -79,9 +79,20 @@ var userInfo = {
     lastName: args.lastName,
     dateOfBirth: args.dateOfBirth
 };
+if (isNaN(rangeBottom) || isNaN(rangeTop)) {
+    if (isNaN(rangeBottom)) {
+        console.log('Lowest Date is Invalid!');
+        process.exit();
+    }
+    if (isNaN(rangeTop)) {
+        console.log('Highest Date is Invalid!');
+        process.exit();
+    }
+}
 console.log('Booking test for:');
 console.log(userInfo);
 console.log("At location " + args.location);
+console.log("Between " + rangeBottom + " to " + rangeTop);
 (function () { return __awaiter(void 0, void 0, void 0, function () {
     function bookDate(listNumber) {
         page.click("#searchResultRadio" + listNumber).then(function () {
@@ -91,7 +102,7 @@ console.log("At location " + args.location);
         });
         //browser.close();
     }
-    var browser, page, bookingsPageResponse, pageNavCheck, availableBookingsPageResponse, repeater;
+    var browser, page, bookingsPageResponse, pageNavCheck, availableBookingsPageResponse, repeater, infoRepeater;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0: return [4 /*yield*/, puppeteer.launch()];
@@ -144,7 +155,7 @@ console.log("At location " + args.location);
                     ])];
             case 11:
                 availableBookingsPageResponse = (_a.sent())[0];
-                return [4 /*yield*/, page.select('select', args.location)];
+                return [4 /*yield*/, page.select('select', 'CAN')];
             case 12:
                 _a.sent();
                 repeater = setInterval(function () { return __awaiter(void 0, void 0, void 0, function () {
@@ -155,7 +166,7 @@ console.log("At location " + args.location);
                             case 1:
                                 _a.sent();
                                 return [4 /*yield*/, new Promise(function (r) { return setTimeout(r, 3000); }).then(function () {
-                                        page.evaluate(function () { return document.querySelector('*').outerHTML; }); //.then(html => console.log(html));
+                                        page.evaluate(function () { var _a; return (_a = document.querySelector('*')) === null || _a === void 0 ? void 0 : _a.outerHTML; }); //.then(html => console.log(html));
                                     })];
                             case 2:
                                 _a.sent();
@@ -193,6 +204,15 @@ console.log("At location " + args.location);
                         }
                     });
                 }); }, 1000);
+                infoRepeater = setInterval(function () { return __awaiter(void 0, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        console.log('Currently booking for: ');
+                        console.log(userInfo);
+                        console.log("At: " + args.location);
+                        console.log("Between " + rangeBottom + " to " + rangeTop);
+                        return [2 /*return*/];
+                    });
+                }); }, 60000);
                 return [2 /*return*/];
         }
     });

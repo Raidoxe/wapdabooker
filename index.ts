@@ -1,6 +1,6 @@
 import { ElementHandle } from "puppeteer";
 const date = require('date-and-time');
-const yargs = require('yargs/yargs')
+const yargs = require('yargs/yargs');
 
 const puppeteer =  require('puppeteer');
 
@@ -51,9 +51,22 @@ const userInfo = {
     dateOfBirth: args.dateOfBirth
 };
 
+if(isNaN(rangeBottom) || isNaN(rangeTop)) {
+    if(isNaN(rangeBottom)) {
+        console.log('Lowest Date is Invalid!');
+        process.exit();
+    }
+    if(isNaN(rangeTop)) {
+        console.log('Highest Date is Invalid!');
+        process.exit();
+    }
+}
+
 console.log('Booking test for:');
 console.log(userInfo);
 console.log(`At location ${args.location}`);
+console.log(`Between ${rangeBottom} to ${rangeTop}`);
+
 
 (
     async () => {
@@ -91,7 +104,7 @@ console.log(`At location ${args.location}`);
             page.click('[title="Search for available bookings"]')
         ])
 
-        await page.select('select', args.location);
+        await page.select('select', 'CAN');
         /* 
         <option value="CAN">Cannington</option>
         <option value="JNP">Joondalup</option>
@@ -107,7 +120,7 @@ console.log(`At location ${args.location}`);
         const repeater = setInterval(async () => {
             await page.click('[title="Search"]');
             await new Promise(r => setTimeout(r, 3000)).then(() => {
-                page.evaluate(() => document.querySelector('*').outerHTML)//.then(html => console.log(html));
+                page.evaluate(() => document.querySelector('*')?.outerHTML)//.then(html => console.log(html));
             });
     
             const times: Array<ElementHandle> = await page.$$('#searchResultRadioLabel');
@@ -142,6 +155,13 @@ console.log(`At location ${args.location}`);
     
             
         }, 1000);
+
+        const infoRepeater = setInterval(async () => {
+            console.log('Currently booking for: ');
+            console.log(userInfo);
+            console.log(`At: ${args.location}`);
+            console.log(`Between ${rangeBottom} to ${rangeTop}`);
+        }, 60000)
 
         function bookDate(listNumber: number) {
             page.click(`#searchResultRadio${listNumber}`).then(() => 
