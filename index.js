@@ -69,8 +69,18 @@ var args = yargs(hideBin(process.argv)).option('licenceNum', {
     description: 'Preffered spot/location for driving test',
     type: 'string'
 }).argv;
+console.log(args.expiryDate);
+console.log(args.licenceNum);
+console.log(args.expiryDate);
+console.log(args.firstName);
+console.log(args.lastName);
+console.log(args.dateOfBirth);
+console.log(args.dateBottom);
+console.log(args.dateTop);
 var rangeTop = date.parse(args.dateTop + " 6:00 PM", 'DD/MM/YYYY h:mm A');
 var rangeBottom = date.parse(args.dateBottom + " 6:00 AM", 'DD/MM/YYYY h:mm A');
+console.log(rangeTop);
+console.log(rangeBottom);
 //const args: Array<string> = process.argv.slice(2);
 var userInfo = {
     licenceNumber: args.licenceNum,
