@@ -104,7 +104,7 @@ console.log(`Between ${rangeBottom} to ${rangeTop}`);
             page.click('[title="Search for available bookings"]')
         ])
 
-        await page.select('select', 'CAN');
+        await page.select('select', args.location);
         /* 
         <option value="CAN">Cannington</option>
         <option value="JNP">Joondalup</option>
