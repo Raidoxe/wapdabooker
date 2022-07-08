@@ -119,9 +119,9 @@ console.log(`Between ${rangeBottom} to ${rangeTop}`);
 
         const repeater = setInterval(async () => {
             await page.click('[title="Search"]');
-            await new Promise(r => setTimeout(r, 3000)).then(() => {
+            await new Promise(r => setTimeout(r, 500)).then(() => {
                 page.evaluate(() => document.querySelector('*')?.outerHTML)//.then(html => console.log(html));
-            });
+            })
     
             const times: Array<ElementHandle> = await page.$$('#searchResultRadioLabel');
     
@@ -145,16 +145,16 @@ console.log(`Between ${rangeBottom} to ${rangeTop}`);
                 return datesWithinRange;
             })
             
-            datesWithinRange.every((bool, i) => {
+            await datesWithinRange.every((bool, i) => {
                 if(bool === true) {
                     bookDate(i);
                     clearInterval(repeater);
                     return false;
                 }
             })
-    
+            return 0;
             
-        }, 1000);
+        }, 2000);
 
         const infoRepeater = setInterval(async () => {
             console.log('Currently booking for: ');

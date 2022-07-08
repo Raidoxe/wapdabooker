@@ -155,7 +155,7 @@ console.log("Between " + rangeBottom + " to " + rangeTop);
                     ])];
             case 11:
                 availableBookingsPageResponse = (_a.sent())[0];
-                return [4 /*yield*/, page.select('select', 'CAN')];
+                return [4 /*yield*/, page.select('select', args.location)];
             case 12:
                 _a.sent();
                 repeater = setInterval(function () { return __awaiter(void 0, void 0, void 0, function () {
@@ -165,7 +165,7 @@ console.log("Between " + rangeBottom + " to " + rangeTop);
                             case 0: return [4 /*yield*/, page.click('[title="Search"]')];
                             case 1:
                                 _a.sent();
-                                return [4 /*yield*/, new Promise(function (r) { return setTimeout(r, 3000); }).then(function () {
+                                return [4 /*yield*/, new Promise(function (r) { return setTimeout(r, 500); }).then(function () {
                                         page.evaluate(function () { var _a; return (_a = document.querySelector('*')) === null || _a === void 0 ? void 0 : _a.outerHTML; }); //.then(html => console.log(html));
                                     })];
                             case 2:
@@ -193,17 +193,19 @@ console.log("Between " + rangeBottom + " to " + rangeTop);
                                     })];
                             case 4:
                                 datesWithinRange = _a.sent();
-                                datesWithinRange.every(function (bool, i) {
-                                    if (bool === true) {
-                                        bookDate(i);
-                                        clearInterval(repeater);
-                                        return false;
-                                    }
-                                });
-                                return [2 /*return*/];
+                                return [4 /*yield*/, datesWithinRange.every(function (bool, i) {
+                                        if (bool === true) {
+                                            bookDate(i);
+                                            clearInterval(repeater);
+                                            return false;
+                                        }
+                                    })];
+                            case 5:
+                                _a.sent();
+                                return [2 /*return*/, 0];
                         }
                     });
-                }); }, 1000);
+                }); }, 2000);
                 infoRepeater = setInterval(function () { return __awaiter(void 0, void 0, void 0, function () {
                     return __generator(this, function (_a) {
                         console.log('Currently booking for: ');
