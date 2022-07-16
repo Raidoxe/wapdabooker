@@ -1,46 +1,10 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-exports.__esModule = true;
-var date = require('date-and-time');
-var yargs = require('yargs/yargs');
-var puppeteer = require('puppeteer');
-var hideBin = require('yargs/helpers').hideBin;
-var args = yargs(hideBin(process.argv)).option('licenceNum', {
+Object.defineProperty(exports, "__esModule", { value: true });
+const date = require('date-and-time');
+const yargs = require('yargs/yargs');
+const puppeteer = require('puppeteer');
+const { hideBin } = require('yargs/helpers');
+const args = yargs(hideBin(process.argv)).option('licenceNum', {
     alias: 'l',
     description: 'Drivers Licence number',
     type: 'string'
@@ -69,10 +33,10 @@ var args = yargs(hideBin(process.argv)).option('licenceNum', {
     description: 'Preffered spot/location for driving test',
     type: 'string'
 }).argv;
-var rangeTop = date.parse(args.dateTop + " 6:00 PM", 'DD/MM/YYYY h:mm A');
-var rangeBottom = date.parse(args.dateBottom + " 6:00 AM", 'DD/MM/YYYY h:mm A');
+const rangeTop = date.parse(`${args.dateTop} 6:00 PM`, 'DD/MM/YYYY h:mm A');
+const rangeBottom = date.parse(`${args.dateBottom} 6:00 AM`, 'DD/MM/YYYY h:mm A');
 //const args: Array<string> = process.argv.slice(2);
-var userInfo = {
+const userInfo = {
     licenceNumber: args.licenceNum,
     expiryDate: args.expiryDate,
     firstName: args.firstName,
@@ -91,134 +55,107 @@ if (isNaN(rangeBottom) || isNaN(rangeTop)) {
 }
 console.log('Booking test for:');
 console.log(userInfo);
-console.log("At location " + args.location);
-console.log("Between " + rangeBottom + " to " + rangeTop);
-(function () { return __awaiter(void 0, void 0, void 0, function () {
-    function bookDate(listNumber) {
-        page.click("#searchResultRadio" + listNumber).then(function () {
-            return page.click('[value="Confirm Booking"]');
-        }).then(function () {
-            return console.log('FOUND BOOKING!');
+console.log(`At location ${args.location}`);
+console.log(`Between ${rangeBottom} to ${rangeTop}`);
+(async () => {
+    const infoRepeater = setInterval(async () => {
+        console.log('Currently booking for: ');
+        console.log(userInfo);
+        console.log(`At: ${args.location}`);
+        console.log(`Between ${rangeBottom} to ${rangeTop}`);
+    }, 60000);
+    try {
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
+        await page.goto('https://online.transport.wa.gov.au/pdabooking/manage/?3').catch((err) => {
+            if (err.toString().includes('net::ERR_INTERNET_DISCONNECTED')) {
+                console.error('INTERNET NOT CONNECTED');
+                browser.close();
+                process.exit();
+            }
         });
-        //browser.close();
-    }
-    var browser, page, bookingsPageResponse, pageNavCheck, availableBookingsPageResponse, repeater, infoRepeater;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0: return [4 /*yield*/, puppeteer.launch()];
-            case 1:
-                browser = _a.sent();
-                return [4 /*yield*/, browser.newPage()];
-            case 2:
-                page = _a.sent();
-                return [4 /*yield*/, page.goto('https://online.transport.wa.gov.au/pdabooking/manage/?3')["catch"](function (err) {
-                        if (err.toString().includes('net::ERR_INTERNET_DISCONNECTED')) {
-                            console.error('INTERNET NOT CONNECTED');
-                            browser.close();
-                            process.exit();
-                        }
-                    })];
-            case 3:
-                _a.sent();
-                return [4 /*yield*/, page.type('[name="clientDetailsPanel:licenceNumber"]', userInfo.licenceNumber)];
-            case 4:
-                _a.sent();
-                return [4 /*yield*/, page.type('#licenceExpiryDatePicker', userInfo.expiryDate)];
-            case 5:
-                _a.sent();
-                return [4 /*yield*/, page.type('[name="clientDetailsPanel:firstName"]', userInfo.firstName)];
-            case 6:
-                _a.sent();
-                return [4 /*yield*/, page.type('[name="clientDetailsPanel:lastName"]', userInfo.lastName)];
-            case 7:
-                _a.sent();
-                return [4 /*yield*/, page.type('#dateOfBirthPicker', userInfo.dateOfBirth)];
-            case 8:
-                _a.sent();
-                return [4 /*yield*/, Promise.all([
-                        page.waitForNavigation(),
-                        page.click('[title="Submit the details and continue to the next page"]')
-                    ])];
-            case 9:
-                bookingsPageResponse = (_a.sent())[0];
-                return [4 /*yield*/, page.$$('[name="clientDetailsPanel:licenceNumber"]')];
-            case 10:
-                pageNavCheck = _a.sent();
-                console.log(pageNavCheck);
-                if (pageNavCheck.length != 0) {
-                    console.error('USER DETAILS INCORRECT');
-                    return [2 /*return*/];
-                }
-                return [4 /*yield*/, Promise.all([
-                        page.waitForNavigation(),
-                        page.click('[title="Search for available bookings"]')
-                    ])];
-            case 11:
-                availableBookingsPageResponse = (_a.sent())[0];
-                return [4 /*yield*/, page.select('select', args.location)];
-            case 12:
-                _a.sent();
-                repeater = setInterval(function () { return __awaiter(void 0, void 0, void 0, function () {
-                    var times, regexString, dateText, datesWithinRange;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, page.click('[title="Search"]')];
-                            case 1:
-                                _a.sent();
-                                return [4 /*yield*/, new Promise(function (r) { return setTimeout(r, 500); }).then(function () {
-                                        page.evaluate(function () { var _a; return (_a = document.querySelector('*')) === null || _a === void 0 ? void 0 : _a.outerHTML; }); //.then(html => console.log(html));
-                                    })];
-                            case 2:
-                                _a.sent();
-                                return [4 /*yield*/, page.$$('#searchResultRadioLabel')];
-                            case 3:
-                                times = _a.sent();
-                                regexString = new RegExp('at ');
-                                dateText = times.map(function (element) {
-                                    return page.evaluate(function (el) { return el.innerText; }, element);
-                                });
-                                return [4 /*yield*/, Promise.all(dateText).then(function (dateText) {
-                                        console.log(dateText);
-                                        var datesWithinRange = dateText.map(function (text) {
-                                            console.log(text);
-                                            var validDate = text.replace(regexString, '');
-                                            console.log(validDate);
-                                            var elDate = date.parse(validDate, 'DD/MM/YYYY h:mm A');
-                                            console.log(elDate);
-                                            var isDateInRange = checkDateInRange(elDate);
-                                            console.log(isDateInRange);
-                                            return isDateInRange;
-                                        });
-                                        return datesWithinRange;
-                                    })];
-                            case 4:
-                                datesWithinRange = _a.sent();
-                                return [4 /*yield*/, datesWithinRange.every(function (bool, i) {
-                                        if (bool === true) {
-                                            bookDate(i);
-                                            clearInterval(repeater);
-                                            return false;
-                                        }
-                                    })];
-                            case 5:
-                                _a.sent();
-                                return [2 /*return*/, 0];
-                        }
-                    });
-                }); }, 2000);
-                infoRepeater = setInterval(function () { return __awaiter(void 0, void 0, void 0, function () {
-                    return __generator(this, function (_a) {
-                        console.log('Currently booking for: ');
-                        console.log(userInfo);
-                        console.log("At: " + args.location);
-                        console.log("Between " + rangeBottom + " to " + rangeTop);
-                        return [2 /*return*/];
-                    });
-                }); }, 60000);
-                return [2 /*return*/];
+        await page.type('[name="clientDetailsPanel:licenceNumber"]', userInfo.licenceNumber);
+        await page.type('#licenceExpiryDatePicker', userInfo.expiryDate);
+        await page.type('[name="clientDetailsPanel:firstName"]', userInfo.firstName);
+        await page.type('[name="clientDetailsPanel:lastName"]', userInfo.lastName);
+        await page.type('#dateOfBirthPicker', userInfo.dateOfBirth);
+        const [bookingsPageResponse] = await Promise.all([
+            page.waitForNavigation(),
+            page.click('[title="Submit the details and continue to the next page"]')
+        ]);
+        const pageNavCheck = await page.$$('[name="clientDetailsPanel:licenceNumber"]');
+        console.log(pageNavCheck);
+        if (pageNavCheck.length != 0) {
+            console.error('USER DETAILS INCORRECT');
+            return;
         }
-    });
-}); })();
+        //title="Search for available bookings"
+        const [availableBookingsPageResponse] = await Promise.all([
+            page.waitForNavigation(),
+            page.click('[title="Search for available bookings"]')
+        ]);
+        await page.select('select', args.location);
+        /*
+        <option value="CAN">Cannington</option>
+        <option value="JNP">Joondalup</option>
+        <option value="KELM">Kelmscott</option>
+        <option value="ROCK">Rockingham</option>
+        SUCCESS=SUC
+        Mirrabooka=MBK
+        Midland=MID
+        West Perth = CTYW
+        Mandurah=MDH
+        */
+        const repeater = setInterval(async () => {
+            await page.click('[title="Search"]');
+            await new Promise(r => setTimeout(r, 500)).then(() => {
+                page.evaluate(() => document.querySelector('*')?.outerHTML); //.then(html => console.log(html));
+            });
+            const times = await page.$$('#searchResultRadioLabel');
+            const regexString = new RegExp('at ');
+            const dateText = times.map((element) => {
+                return page.evaluate((el) => el.innerText, element);
+            });
+            const datesWithinRange = await Promise.all(dateText).then(dateText => {
+                console.log(dateText);
+                const datesWithinRange = dateText.map(text => {
+                    console.log(text);
+                    const validDate = text.replace(regexString, '');
+                    console.log(validDate);
+                    const elDate = date.parse(validDate, 'DD/MM/YYYY h:mm A');
+                    console.log(elDate);
+                    const isDateInRange = checkDateInRange(elDate);
+                    console.log(isDateInRange);
+                    return isDateInRange;
+                });
+                return datesWithinRange;
+            });
+            await datesWithinRange.every((bool, i) => {
+                if (bool === true) {
+                    bookDate(i);
+                    clearInterval(repeater);
+                    return false;
+                }
+            });
+            return 0;
+        }, 2000);
+        function bookDate(listNumber) {
+            page.click(`#searchResultRadio${listNumber}`).then(() => page.click('[value="Confirm Booking"]')).then(() => {
+                console.log('FOUND BOOKING!');
+                clearInterval(infoRepeater);
+            });
+            //browser.close();
+        }
+    }
+    catch (e) {
+        console.error(e);
+        console.log('ERROR');
+    }
+    finally {
+        clearInterval(infoRepeater);
+    }
+    //await browser.close();
+})();
 function checkDateInRange(dateListing) {
     console.log(date.subtract(rangeTop, dateListing).toHours());
     console.log(date.subtract(dateListing, rangeBottom).toHours());

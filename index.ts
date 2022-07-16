@@ -68,11 +68,21 @@ console.log(`At location ${args.location}`);
 console.log(`Between ${rangeBottom} to ${rangeTop}`);
 
 
+
 (
     async () => {
+        const infoRepeater = setInterval(async () => {
+            console.log('Currently booking for: ');
+            console.log(userInfo);
+            console.log(`At: ${args.location}`);
+            console.log(`Between ${rangeBottom} to ${rangeTop}`);
+        }, 60000)
+
+        try {
+
         const browser = await puppeteer.launch()
         const page = await browser.newPage()
-        await page.goto('https://online.transport.wa.gov.au/pdabooking/manage/?3').catch(err => {
+        await page.goto('https://online.transport.wa.gov.au/pdabooking/manage/?3').catch((err: any) => {
             if(err.toString().includes('net::ERR_INTERNET_DISCONNECTED')) {
                 console.error('INTERNET NOT CONNECTED');
                 browser.close();
@@ -116,6 +126,7 @@ console.log(`Between ${rangeBottom} to ${rangeTop}`);
         West Perth = CTYW
         Mandurah=MDH
         */
+        
 
         const repeater = setInterval(async () => {
             await page.click('[title="Search"]');
@@ -127,7 +138,7 @@ console.log(`Between ${rangeBottom} to ${rangeTop}`);
     
             const regexString = new RegExp('at ');
             const dateText = times.map((element) => {
-                return page.evaluate(el => el.innerText, element);
+                return page.evaluate((el: any) => el.innerText, element);
             });
     
             const datesWithinRange = await Promise.all(dateText).then(dateText => {
@@ -156,26 +167,26 @@ console.log(`Between ${rangeBottom} to ${rangeTop}`);
             
         }, 2000);
 
-        const infoRepeater = setInterval(async () => {
-            console.log('Currently booking for: ');
-            console.log(userInfo);
-            console.log(`At: ${args.location}`);
-            console.log(`Between ${rangeBottom} to ${rangeTop}`);
-        }, 60000)
-
         function bookDate(listNumber: number) {
             page.click(`#searchResultRadio${listNumber}`).then(() => 
-            page.click('[value="Confirm Booking"]')).then(() => 
-            console.log('FOUND BOOKING!'));
+            page.click('[value="Confirm Booking"]')).then(() => {
+                console.log('FOUND BOOKING!')
+                clearInterval(infoRepeater)
+            });
             //browser.close();
         }
-        
 
+    } catch(e) {
+        console.error(e);
+        console.log('ERROR')
+    } finally {
+        clearInterval(infoRepeater)
+    }
         //await browser.close();
     }
 )();
 
-function checkDateInRange(dateListing): boolean {
+function checkDateInRange(dateListing: Date): boolean {
     console.log(date.subtract(rangeTop, dateListing).toHours());
     console.log(date.subtract(dateListing, rangeBottom).toHours());
     if((date.subtract(rangeTop, dateListing).toHours() >= 0) && (date.subtract(dateListing, rangeBottom).toHours() >= 0)) {
