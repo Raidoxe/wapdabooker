@@ -1,0 +1,71 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach by Process ID",
+      "processId": "${command:PickProcess}",
+      "request": "attach",
+      "skipFiles": ["<node_internals>/**"],
+      "type": "node"
+    },
+
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Lachie",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "./dist/index.js",
+      "preLaunchTask": "tsc: build - tsconfig.json",
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+      "args": [
+        "--firstName='Lachlan'",
+        "--lastName='Flynn'",
+        "--expiryDate='17/05/2024'",
+        "--dateOfBirth='28/07/2004'",
+        "--dateBottom='16/08/2022'",
+        "--dateTop='15/08/2023'",
+        "--debug='TRUE'",
+        "--licenceNum='8137532'",
+        "--pref1='ROCK'",
+        "--pref2='SUC'",
+        "--pref3='MBK'",
+        "--pref4='CTYW'"
+      ],
+      "env": {
+        "TWOCAPTCHA_KEY": "0e4d75fe282e287fb1b524dfc26b01c1"
+      },
+      "trace": true
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Lachie Regional",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "./dist/index.js",
+      "preLaunchTask": "tsc: build - tsconfig.json",
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+      "args": [
+        "--firstName='Lachlan'",
+        "--lastName='Flynn'",
+        "--expiryDate='17/05/2024'",
+        "--dateOfBirth='28/07/2004'",
+        "--dateBottom='01/12/2022'",
+        "--dateTop='15/08/2023'",
+        "--debug='TRUE'",
+        "--licenceNum='8137532'",
+        "--pref1='AUSO'",
+        "--pref2='CAR'",
+        "--pref3='DERO'",
+        "--pref4='ALB'",
+        "--regional='TRUE'"
+      ],
+      "env": {
+        "TWOCAPTCHA_KEY": "0e4d75fe282e287fb1b524dfc26b01c1"
+      },
+      "trace": true
+    }
+  ]
+}

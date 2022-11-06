@@ -5,18 +5,37 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "node index.js",
+    "lachie": "node ./dist/index.js --firstName='Lachlan' --lastName='Flynn' --licenceNum='8137532' --expiryDate='17/05/2024' --teOfBirth='28/07/2004' --dateBottom='20/11/2022' --dateTop='15/08/2023' --debug='TRUE' --pref1='MID' --pref2='CAN' --pref3='KELM' --pref4='MDH'",
+    "lint": "eslint -c './.eslintrc' --fix './src/**/*.ts'"
   },
   "author": "Oliver HUth",
   "license": "ISC",
   "dependencies": {
+    "@types/date-and-time": "^0.13.0",
     "date-and-time": "^2.1.1",
+    "dotenv": "^16.0.2",
     "nodemon": "^2.0.19",
-    "puppeteer": "^15.3.2",
+    "playwright-core": "^1.26.1",
+    "puppeteer": "^15.5.0",
+    "puppeteer-extra": "^3.3.4",
+    "puppeteer-extra-plugin-recaptcha": "^3.6.6",
     "yargs": "^17.5.1"
   },
   "devDependencies": {
+    "@types/node": "^18.8.3",
     "@types/puppeteer": "^5.4.6",
-    "@types/yargs": "^17.0.10"
+    "@types/yargs": "^17.0.10",
+    "@typescript-eslint/eslint-plugin": "^5.40.1",
+    "@typescript-eslint/parser": "^5.40.1",
+    "eslint": "^8.26.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-react": "^7.31.10",
+    "prettier": "^2.7.1"
   }
 }
