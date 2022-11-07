@@ -194,8 +194,10 @@ const startBot = async () => {
         //Selects locations to look for
         await page.evaluateHandle((locations) => {
             locations.forEach((loc) => {
-                const doc = document.querySelector(`[value=${loc}]`);
-                doc.click();
+                if (loc != undefined) {
+                    const doc = document.querySelector(`[value=${loc}]`);
+                    doc.click();
+                }
             });
         }, locations);
         const repeater = setInterval(async () => {

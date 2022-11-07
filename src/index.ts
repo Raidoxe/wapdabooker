@@ -235,8 +235,10 @@ const startBot = async () => {
     //Selects locations to look for
     await page.evaluateHandle((locations) => {
       locations.forEach((loc) => {
-        const doc = document.querySelector(`[value=${loc}]`) as HTMLElement;
-        doc.click();
+        if (loc != undefined) {
+          const doc = document.querySelector(`[value=${loc}]`) as HTMLElement;
+          doc.click();
+        }
       });
     }, locations);
 
