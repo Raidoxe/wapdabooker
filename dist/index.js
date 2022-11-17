@@ -245,10 +245,8 @@ const startBot = async () => {
         function bookDate(listNumber) {
             page
                 .click(`#searchResultRadio${listNumber}`)
-                .then(() => page.click('[value="Confirm booking"]'))
-                .then(() => {
-                return page.waitForNavigation;
-            })
+                .then(() => Promise.all([page.waitForNavigation(), page.click('[value="Confirm booking"]')]))
+                .then(() => Promise.all([page.waitForNavigation(), page.click('[value="Finish"]')]))
                 .then(() => {
                 console.log("FOUND BOOKING!");
                 return delay(10000);
