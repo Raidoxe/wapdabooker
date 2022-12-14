@@ -11,18 +11,6 @@ console.log("CAPTCHA KEY: " + process.env.TWOCAPTCHA_KEY);
 const yargs = require("yargs/yargs");
 puppeteer_extra_1.default.use((0, puppeteer_extra_plugin_recaptcha_1.default)());
 const { hideBin } = require("yargs/helpers");
-//const locationButtonXVal = 375;
-/*const locationButtonYValues = {
-  CAN: 516,
-  JNP: 540,
-  KELM: 563,
-  MDH: 589,
-  MID: 611,
-  MBK: 637,
-  ROCK: 661,
-  SUC: 685,
-  CTYW: 709,
-};*/
 if (process.env.TWOCAPTCHA_KEY === undefined) {
     console.error("TWOCAPTCHA KEY NOT FOUND");
     process.exit(1);
@@ -76,7 +64,6 @@ const args = yargs(hideBin(process.argv))
     description: "set to TRUE to enable debug mode",
     type: "string",
 }).argv;
-//type KELM = "KELM"; type CAN = "CAN"; type MDH = "MDH"; type JNP = "JNP"; type ROCK = "ROCK"; type SUC = "SUC"; type MBK = "MBK"; type MID = "MID"; type CTYW = "CTYW";
 let isRegional = false;
 if (args.regional === "TRUE")
     isRegional = true;
@@ -201,8 +188,8 @@ const startBot = async () => {
             });
         }, locations);
         const repeater = setInterval(async () => {
-            const checkSessionExpired = await page.$$("h2");
-            if (checkSessionExpired.length != 0) {
+            const searchButton = await page.$$('[title="Search"]');
+            if (searchButton.length === 0) {
                 //session has expired
                 await page.close();
                 await browser.close();
@@ -211,44 +198,55 @@ const startBot = async () => {
                 clearInterval(repeater);
                 return;
             }
-            await page.click('[title="Search"]'); //clicks button to get server to refresh information
+            searchButton[0].click(); //clicks button to get server to refresh information
             await new Promise((r) => setTimeout(r, 500)).then(() => {
                 //waits for information to reach client
                 page.evaluate(() => document.querySelector("*")?.outerHTML); //gets  html from document
             });
             const times = await page.$$("#searchResultRadioLabel"); //list of elements containing dates needed
-            const dateText = times.map((element) => {
-                // retrieves text form of dates from all html elements
-                return page.evaluate((el) => el.innerText, element); //this is a promise
-            });
-            const datesWithinRange = await Promise.all(dateText).then((dateText) => {
-                const datesWithinRange = dateText.map((text) => {
-                    const splitDate = text.split(" "); //splits string into something like ["02/11/2022", "at", "11:35", "AM", ...]
-                    const formattedDate = `${splitDate[0]} ${splitDate[2]} ${splitDate[3]}`; //creates a string that can be easily converted into a date
-                    const elDate = date_and_time_1.default.parse(formattedDate, "DD/MM/YYYY h:mm A"); //parses textual date into a date object
-                    const isDateInRange = checkDateInRange(elDate); // checks if date is in specified range of dates
-                    return isDateInRange;
-                });
-                return datesWithinRange;
-            });
-            await datesWithinRange.every((bool, i) => {
+            if (times.length != 0) {
                 if (isBooked === false) {
-                    if (bool === true) {
-                        bookDate(i);
-                        clearInterval(repeater);
-                        return false;
-                    }
+                    const dateTextProms = times.map(async (element) => {
+                        // retrieves text form of dates from all html elements
+                        return page.evaluate((el) => el.innerText, element); //this is a promise
+                    });
+                    const dateText = await Promise.all(dateTextProms);
+                    bookDate(dateText);
+                    clearInterval(repeater);
+                    return;
                 }
+            }
+            /*const datesWithinRange: boolean[] = dateText.map((text) => {
+              const splitDate = text.split(" "); //splits string into something like ["02/11/2022", "at", "11:35", "AM", ...]
+      
+              const formattedDate = `${splitDate[0]} ${splitDate[2]} ${splitDate[3]}`; //creates a string that can be easily converted into a date
+      
+              const elDate = date.parse(formattedDate, "DD/MM/YYYY h:mm A"); //parses textual date into a date object
+      
+              const isDateInRange = checkDateInRange(elDate); // checks if date is in specified range of dates
+      
+              return isDateInRange;
             });
+      
+            await datesWithinRange.every((bool, i) => {
+              if (isBooked === false) {
+                if (bool === true) {
+                  bookDate(i, dateText);
+                  clearInterval(repeater);
+                  return false;
+                }
+              }
+            });*/
             return 0;
         }, 2000);
-        function bookDate(listNumber) {
+        function bookDate(dateText) {
             page
-                .click(`#searchResultRadio${listNumber}`)
+                .click(`#searchResultRadio0`)
                 .then(() => Promise.all([page.waitForNavigation(), page.click('[value="Confirm booking"]')]))
                 .then(() => Promise.all([page.waitForNavigation(), page.click('[value="Finish"]')]))
                 .then(() => {
                 console.log("FOUND BOOKING!");
+                console.log(dateText[0]);
                 return delay(10000);
             })
                 .then(() => {
@@ -269,19 +267,20 @@ const startBot = async () => {
     }
     //await browser.close();
 };
-function checkDateInRange(dateListing) {
-    if (args.debug == "TRUE") {
-        console.info(date_and_time_1.default.subtract(rangeTop, dateListing).toHours());
-        console.info(date_and_time_1.default.subtract(dateListing, rangeBottom).toHours());
-    }
-    if (date_and_time_1.default.subtract(rangeTop, dateListing).toHours() >= 0 &&
-        date_and_time_1.default.subtract(dateListing, rangeBottom).toHours() >= 0) {
-        return true;
-    }
-    else {
-        return false;
-    }
-}
+/*function checkDateInRange(dateListing: Date): boolean {
+  if (args.debug == "TRUE") {
+    console.info(date.subtract(rangeTop, dateListing).toHours());
+    console.info(date.subtract(dateListing, rangeBottom).toHours());
+  }
+  if (
+    date.subtract(rangeTop, dateListing).toHours() >= 0 &&
+    date.subtract(dateListing, rangeBottom).toHours() >= 0
+  ) {
+    return true;
+  } else {
+    return false;
+  }
+}*/
 function formatDateRanges(rangeBottom, rangeTop) {
     let newBottomDate = rangeBottom;
     //date selector logic
