@@ -5,7 +5,7 @@ import ReCaptchaPlugin from "puppeteer-extra-plugin-recaptcha";
 import puppeteer from "puppeteer-extra";
 
 import { Location } from "./Location";
-import { ElementHandle } from "puppeteer";
+import { ElementHandle, HTTPResponse } from "puppeteer";
 
 require("dotenv").config();
 
@@ -75,6 +75,12 @@ const args = yargs(hideBin(process.argv))
     type: "string",
   }).argv;
 
+let pollingRate: number = 2000;
+
+if (args.pollingRate != undefined) {
+  pollingRate = args.pollingRate;
+}
+
 let isRegional = false;
 
 if (args.regional === "TRUE") isRegional = true;
@@ -120,7 +126,7 @@ console.log(`Between ${rangeBottom} to ${rangeTop}`);
 
 let GCaptchaResponse = ""; //holds solution to reCaptcha
 
-const isBooked: boolean = false;
+let isBooked: boolean = false;
 
 let debug: boolean = false;
 if (args.debug === "TRUE") debug = true;
@@ -130,6 +136,8 @@ const browserargs = {
 };
 
 rangeBottom = formatDateRanges(rangeBottom, rangeTop);
+
+let informationRecieved: boolean = false;
 
 const startBot = async () => {
   console.log("STARTING BOT");
@@ -169,6 +177,17 @@ const startBot = async () => {
         }
       }
       request.continue();
+    });
+
+    page.on("response", (response: HTTPResponse) => {
+      //have to use text as the pda website is so old it uses xml instead of json
+      const requestPostData = response.request().postData();
+      if (requestPostData != undefined) {
+        if (requestPostData.includes("search=1")) {
+          //marker for booking list search
+          informationRecieved = true;
+        }
+      }
     });
 
     const { solutions, error } = await page.solveRecaptchas(); //solves recaptchas and returns a solution/errors
@@ -239,30 +258,41 @@ const startBot = async () => {
         return;
       }
 
-      searchButton[0].click(); //clicks button to get server to refresh information
+      await searchButton[0].click(); //clicks button to get server to refresh information
 
-      await new Promise((r) => setTimeout(r, 500)).then(() => {
+      /*await new Promise((r) => setTimeout(r, 1000)).then(() => {
         //waits for information to reach client
         page.evaluate(() => document.querySelector("*")?.outerHTML); //gets  html from document
-      });
+      });*/
 
-      const times: ElementHandle<Element>[] = await page.$$("#searchResultRadioLabel"); //list of elements containing dates needed
+      await delay(1000); //waits for booking info to reach client
 
-      if (times.length != 0) {
-        if (isBooked === false) {
-          const dateTextProms: Promise<string>[] = times.map(async (element) => {
-            // retrieves text form of dates from all html elements
-            return page.evaluate((el: any) => el.innerText, element); //this is a promise
-          });
+      while (isBooked == false) {
+        if (informationRecieved == true) {
+          //checks if information has reached client
+          const times: ElementHandle<Element>[] = await page.$$("#searchResultRadioLabel"); //list of elements containing dates needed
 
-          const dateText: Array<string> = await Promise.all(dateTextProms);
+          if (times.length != 0) {
+            const dateTextProms: Promise<string>[] = times.map(async (element) => {
+              // retrieves text form of dates from all html elements
+              return page.evaluate((el: any) => el.innerText, element); //this is a promise
+            });
 
-          bookDate(dateText);
-          clearInterval(repeater);
-          return;
+            const dateText: Array<string> = await Promise.all(dateTextProms);
+
+            isBooked = true;
+
+            bookDate(dateText);
+            clearInterval(repeater);
+          }
+
+          informationRecieved = false;
+          break;
+        } else {
+          console.log(1);
+          await delay(500); //waits another 500ms if information hasn't reached client
         }
       }
-
       /*const datesWithinRange: boolean[] = dateText.map((text) => {
         const splitDate = text.split(" "); //splits string into something like ["02/11/2022", "at", "11:35", "AM", ...]
 
@@ -284,8 +314,7 @@ const startBot = async () => {
           }
         }
       });*/
-      return 0;
-    }, 2000);
+    }, pollingRate);
 
     function bookDate(dateText: Array<string>) {
       page

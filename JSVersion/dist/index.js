@@ -64,6 +64,10 @@ const args = yargs(hideBin(process.argv))
     description: "set to TRUE to enable debug mode",
     type: "string",
 }).argv;
+let pollingRate = 2000;
+if (args.pollingRate != undefined) {
+    pollingRate = args.pollingRate;
+}
 let isRegional = false;
 if (args.regional === "TRUE")
     isRegional = true;
@@ -100,7 +104,7 @@ console.log("Booking test for:");
 console.log(userInfo);
 console.log(`Between ${rangeBottom} to ${rangeTop}`);
 let GCaptchaResponse = ""; //holds solution to reCaptcha
-const isBooked = false;
+let isBooked = false;
 let debug = false;
 if (args.debug === "TRUE")
     debug = true;
@@ -108,6 +112,7 @@ const browserargs = {
     headless: !debug,
 };
 rangeBottom = formatDateRanges(rangeBottom, rangeTop);
+let informationRecieved = false;
 const startBot = async () => {
     console.log("STARTING BOT");
     try {
@@ -141,6 +146,16 @@ const startBot = async () => {
                 }
             }
             request.continue();
+        });
+        page.on("response", (response) => {
+            //have to use text as the pda website is so old it uses xml instead of json
+            const requestPostData = response.request().postData();
+            if (requestPostData != undefined) {
+                if (requestPostData.includes("search=1")) {
+                    //marker for booking list search
+                    informationRecieved = true;
+                }
+            }
         });
         const { solutions, error } = await page.solveRecaptchas(); //solves recaptchas and returns a solution/errors
         if (error != undefined) {
@@ -198,22 +213,32 @@ const startBot = async () => {
                 clearInterval(repeater);
                 return;
             }
-            searchButton[0].click(); //clicks button to get server to refresh information
-            await new Promise((r) => setTimeout(r, 500)).then(() => {
-                //waits for information to reach client
-                page.evaluate(() => document.querySelector("*")?.outerHTML); //gets  html from document
-            });
-            const times = await page.$$("#searchResultRadioLabel"); //list of elements containing dates needed
-            if (times.length != 0) {
-                if (isBooked === false) {
-                    const dateTextProms = times.map(async (element) => {
-                        // retrieves text form of dates from all html elements
-                        return page.evaluate((el) => el.innerText, element); //this is a promise
-                    });
-                    const dateText = await Promise.all(dateTextProms);
-                    bookDate(dateText);
-                    clearInterval(repeater);
-                    return;
+            await searchButton[0].click(); //clicks button to get server to refresh information
+            /*await new Promise((r) => setTimeout(r, 1000)).then(() => {
+              //waits for information to reach client
+              page.evaluate(() => document.querySelector("*")?.outerHTML); //gets  html from document
+            });*/
+            await delay(1000); //waits for booking info to reach client
+            while (isBooked == false) {
+                if (informationRecieved == true) {
+                    //checks if information has reached client
+                    const times = await page.$$("#searchResultRadioLabel"); //list of elements containing dates needed
+                    if (times.length != 0) {
+                        const dateTextProms = times.map(async (element) => {
+                            // retrieves text form of dates from all html elements
+                            return page.evaluate((el) => el.innerText, element); //this is a promise
+                        });
+                        const dateText = await Promise.all(dateTextProms);
+                        isBooked = true;
+                        bookDate(dateText);
+                        clearInterval(repeater);
+                    }
+                    informationRecieved = false;
+                    break;
+                }
+                else {
+                    console.log(1);
+                    await delay(500); //waits another 500ms if information hasn't reached client
                 }
             }
             /*const datesWithinRange: boolean[] = dateText.map((text) => {
@@ -237,8 +262,7 @@ const startBot = async () => {
                 }
               }
             });*/
-            return 0;
-        }, 2000);
+        }, pollingRate);
         function bookDate(dateText) {
             page
                 .click(`#searchResultRadio0`)
