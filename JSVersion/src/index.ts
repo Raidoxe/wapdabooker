@@ -258,7 +258,15 @@ const startBot = async () => {
         return;
       }
 
-      await searchButton[0].click(); //clicks button to get server to refresh information
+      await searchButton[0].click().catch((e) => {
+        console.log(e);
+        page.close();
+        browser.close();
+        console.log("Session ended, restarting.");
+        startBot(); //starts a new bot instance
+        clearInterval(repeater);
+        return;
+      }); //clicks button to get server to refresh information
 
       /*await new Promise((r) => setTimeout(r, 1000)).then(() => {
         //waits for information to reach client
