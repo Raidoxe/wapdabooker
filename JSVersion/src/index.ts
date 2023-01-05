@@ -260,7 +260,6 @@ const startBot = async () => {
 
       await searchButton[0].click().catch((e) => {
         console.log(e);
-        page.close();
         browser.close();
         console.log("Session ended, restarting.");
         startBot(); //starts a new bot instance
