@@ -245,40 +245,41 @@ const startBot = async () => {
     }, locations);
 
     async function newTimesInfoCallback() {
-      const times: ElementHandle<Element>[] = await page.$$("#searchResultRadioLabel"); //list of elements containing dates needed
+      try {
+        const times: ElementHandle<Element>[] = await page.$$("#searchResultRadioLabel"); //list of elements containing dates needed
 
-      if (times.length != 0 && isBooked == false) {
-        const dateTextProms: Promise<string>[] = times.map(async (element) => {
-          // retrieves text form of dates from all html elements
-          return page.evaluate((el: any) => el.innerText, element); //this is a promise
-        });
+        if (times.length != 0 && isBooked == false) {
+          const dateTextProms: Promise<string>[] = times.map(async (element) => {
+            // retrieves text form of dates from all html elements
+            return page.evaluate((el: any) => el.innerText, element); //this is a promise
+          });
 
-        const dateText: Array<string> = await Promise.all(dateTextProms);
+          const dateText: Array<string> = await Promise.all(dateTextProms);
 
-        isBooked = true;
+          isBooked = true;
 
-        bookDate(dateText);
-        return;
-      }
+          bookDate(dateText);
+          return;
+        }
 
-      await delay(pollingRate);
+        await delay(pollingRate);
 
-      const searchButton = await page.$$('[title="Search"]');
-      if (searchButton.length === 0) {
-        //session has expired
-        await browser.close();
-        console.log("Session ended, restarting.");
-        startBot(); //starts a new bot instance
-        return;
-      }
+        const searchButton = await page.$$('[title="Search"]');
+        if (searchButton.length === 0) {
+          //session has expired
+          await browser.close();
+          console.log("Session ended, restarting.");
+          startBot(); //starts a new bot instance
+          return;
+        }
 
-      await searchButton[0].click().catch((e) => {
+        await searchButton[0].click();
+      } catch (e) {
         console.log(e);
         browser.close();
-        console.log("Session ended, restarting.");
-        startBot(); //starts a new bot instance
+        startBot();
         return;
-      }); //clicks button to get server to refresh information
+      }
     }
 
     /*const repeater = setInterval(async () => {
@@ -390,13 +391,7 @@ const startBot = async () => {
       startBot(); //starts a new bot instance
       return;
     }
-    await searchButton[0].click().catch((e) => {
-      console.log(e);
-      browser.close();
-      console.log("Session ended, restarting.");
-      startBot(); //starts a new bot instance
-      return;
-    }); //clicks button to get server to refresh information
+    await searchButton[0].click();
   } catch (e) {
     console.error(e);
     console.log("ERROR");

@@ -202,33 +202,35 @@ const startBot = async () => {
             });
         }, locations);
         async function newTimesInfoCallback() {
-            const times = await page.$$("#searchResultRadioLabel"); //list of elements containing dates needed
-            if (times.length != 0 && isBooked == false) {
-                const dateTextProms = times.map(async (element) => {
-                    // retrieves text form of dates from all html elements
-                    return page.evaluate((el) => el.innerText, element); //this is a promise
-                });
-                const dateText = await Promise.all(dateTextProms);
-                isBooked = true;
-                bookDate(dateText);
-                return;
+            try {
+                const times = await page.$$("#searchResultRadioLabel"); //list of elements containing dates needed
+                if (times.length != 0 && isBooked == false) {
+                    const dateTextProms = times.map(async (element) => {
+                        // retrieves text form of dates from all html elements
+                        return page.evaluate((el) => el.innerText, element); //this is a promise
+                    });
+                    const dateText = await Promise.all(dateTextProms);
+                    isBooked = true;
+                    bookDate(dateText);
+                    return;
+                }
+                await delay(pollingRate);
+                const searchButton = await page.$$('[title="Search"]');
+                if (searchButton.length === 0) {
+                    //session has expired
+                    await browser.close();
+                    console.log("Session ended, restarting.");
+                    startBot(); //starts a new bot instance
+                    return;
+                }
+                await searchButton[0].click();
             }
-            await delay(pollingRate);
-            const searchButton = await page.$$('[title="Search"]');
-            if (searchButton.length === 0) {
-                //session has expired
-                await browser.close();
-                console.log("Session ended, restarting.");
-                startBot(); //starts a new bot instance
-                return;
-            }
-            await searchButton[0].click().catch((e) => {
+            catch (e) {
                 console.log(e);
                 browser.close();
-                console.log("Session ended, restarting.");
-                startBot(); //starts a new bot instance
+                startBot();
                 return;
-            }); //clicks button to get server to refresh information
+            }
         }
         /*const repeater = setInterval(async () => {
           let searchButton = await page.$$('[title="Search"]');
@@ -336,13 +338,7 @@ const startBot = async () => {
             startBot(); //starts a new bot instance
             return;
         }
-        await searchButton[0].click().catch((e) => {
-            console.log(e);
-            browser.close();
-            console.log("Session ended, restarting.");
-            startBot(); //starts a new bot instance
-            return;
-        }); //clicks button to get server to refresh information
+        await searchButton[0].click();
     }
     catch (e) {
         console.error(e);
