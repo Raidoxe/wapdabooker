@@ -112,7 +112,6 @@ const browserargs = {
     headless: !debug,
 };
 rangeBottom = formatDateRanges(rangeBottom, rangeTop);
-let informationRecieved = false;
 const startBot = async () => {
     console.log("STARTING BOT");
     try {
@@ -153,7 +152,7 @@ const startBot = async () => {
             if (requestPostData != undefined) {
                 if (requestPostData.includes("search=1")) {
                     //marker for booking list search
-                    informationRecieved = true;
+                    newTimesInfoCallback();
                 }
             }
         });
@@ -202,15 +201,25 @@ const startBot = async () => {
                 }
             });
         }, locations);
-        const repeater = setInterval(async () => {
+        async function newTimesInfoCallback() {
+            const times = await page.$$("#searchResultRadioLabel"); //list of elements containing dates needed
+            if (times.length != 0 && isBooked == false) {
+                const dateTextProms = times.map(async (element) => {
+                    // retrieves text form of dates from all html elements
+                    return page.evaluate((el) => el.innerText, element); //this is a promise
+                });
+                const dateText = await Promise.all(dateTextProms);
+                isBooked = true;
+                bookDate(dateText);
+                return;
+            }
+            await delay(pollingRate);
             const searchButton = await page.$$('[title="Search"]');
             if (searchButton.length === 0) {
                 //session has expired
-                await page.close();
                 await browser.close();
                 console.log("Session ended, restarting.");
                 startBot(); //starts a new bot instance
-                clearInterval(repeater);
                 return;
             }
             await searchButton[0].click().catch((e) => {
@@ -218,58 +227,89 @@ const startBot = async () => {
                 browser.close();
                 console.log("Session ended, restarting.");
                 startBot(); //starts a new bot instance
-                clearInterval(repeater);
                 return;
             }); //clicks button to get server to refresh information
-            /*await new Promise((r) => setTimeout(r, 1000)).then(() => {
-              //waits for information to reach client
-              page.evaluate(() => document.querySelector("*")?.outerHTML); //gets  html from document
-            });*/
-            await delay(1000); //waits for booking info to reach client
-            while (isBooked == false) {
-                if (informationRecieved == true) {
-                    //checks if information has reached client
-                    const times = await page.$$("#searchResultRadioLabel"); //list of elements containing dates needed
-                    if (times.length != 0) {
-                        const dateTextProms = times.map(async (element) => {
-                            // retrieves text form of dates from all html elements
-                            return page.evaluate((el) => el.innerText, element); //this is a promise
-                        });
-                        const dateText = await Promise.all(dateTextProms);
-                        isBooked = true;
-                        bookDate(dateText);
-                        clearInterval(repeater);
-                    }
-                    informationRecieved = false;
-                    break;
-                }
-                else {
-                    console.log(1);
-                    await delay(500); //waits another 500ms if information hasn't reached client
-                }
+        }
+        /*const repeater = setInterval(async () => {
+          let searchButton = await page.$$('[title="Search"]');
+          console.log(searchButton);
+          if (searchButton.length === 0) {
+            //session has expired
+            await browser.close();
+            console.log("Session ended, restarting.");
+            startBot(); //starts a new bot instance
+            clearInterval(repeater);
+            return;
+          }
+          await searchButton[0].click().catch((e) => {
+            console.log(e);
+            browser.close();
+            console.log("Session ended, restarting.");
+            startBot(); //starts a new bot instance
+            clearInterval(repeater);
+            return;
+          }); //clicks button to get server to refresh information
+    
+          await delay(1000); //waits for booking info to reach client
+    
+          while (isBooked == false) {
+            searchButton = await page.$$('[title="Search"]');
+            if (searchButton.length === 0) {
+              //session has expired
+              await browser.close();
+              console.log("Session ended, restarting.");
+              startBot(); //starts a new bot instance
+              clearInterval(repeater);
+              break;
             }
-            /*const datesWithinRange: boolean[] = dateText.map((text) => {
-              const splitDate = text.split(" "); //splits string into something like ["02/11/2022", "at", "11:35", "AM", ...]
-      
-              const formattedDate = `${splitDate[0]} ${splitDate[2]} ${splitDate[3]}`; //creates a string that can be easily converted into a date
-      
-              const elDate = date.parse(formattedDate, "DD/MM/YYYY h:mm A"); //parses textual date into a date object
-      
-              const isDateInRange = checkDateInRange(elDate); // checks if date is in specified range of dates
-      
-              return isDateInRange;
-            });
-      
-            await datesWithinRange.every((bool, i) => {
-              if (isBooked === false) {
-                if (bool === true) {
-                  bookDate(i, dateText);
-                  clearInterval(repeater);
-                  return false;
-                }
+    
+            if (informationRecieved == true) {
+              //checks if information has reached client
+              const times: ElementHandle<Element>[] = await page.$$("#searchResultRadioLabel"); //list of elements containing dates needed
+    
+              if (times.length != 0) {
+                const dateTextProms: Promise<string>[] = times.map(async (element) => {
+                  // retrieves text form of dates from all html elements
+                  return page.evaluate((el: any) => el.innerText, element); //this is a promise
+                });
+    
+                const dateText: Array<string> = await Promise.all(dateTextProms);
+    
+                isBooked = true;
+    
+                bookDate(dateText);
+                clearInterval(repeater);
               }
-            });*/
-        }, pollingRate);
+    
+              informationRecieved = false;
+              break;
+            } else {
+              console.log(1);
+              await delay(500); //waits another 500ms if information hasn't reached client
+            }
+          }
+          /*const datesWithinRange: boolean[] = dateText.map((text) => {
+            const splitDate = text.split(" "); //splits string into something like ["02/11/2022", "at", "11:35", "AM", ...]
+    
+            const formattedDate = `${splitDate[0]} ${splitDate[2]} ${splitDate[3]}`; //creates a string that can be easily converted into a date
+    
+            const elDate = date.parse(formattedDate, "DD/MM/YYYY h:mm A"); //parses textual date into a date object
+    
+            const isDateInRange = checkDateInRange(elDate); // checks if date is in specified range of dates
+    
+            return isDateInRange;
+          });
+    
+          await datesWithinRange.every((bool, i) => {
+            if (isBooked === false) {
+              if (bool === true) {
+                bookDate(i, dateText);
+                clearInterval(repeater);
+                return false;
+              }
+            }
+          });
+        }, pollingRate);*/
         function bookDate(dateText) {
             page
                 .click(`#searchResultRadio0`)
@@ -288,30 +328,30 @@ const startBot = async () => {
                 console.error(e);
             });
         }
+        const searchButton = await page.$$('[title="Search"]');
+        if (searchButton.length === 0) {
+            //session has expired
+            await browser.close();
+            console.log("Session ended, restarting.");
+            startBot(); //starts a new bot instance
+            return;
+        }
+        await searchButton[0].click().catch((e) => {
+            console.log(e);
+            browser.close();
+            console.log("Session ended, restarting.");
+            startBot(); //starts a new bot instance
+            return;
+        }); //clicks button to get server to refresh information
     }
     catch (e) {
         console.error(e);
         console.log("ERROR");
-        //clearInterval(infoRepeater)
+        startBot();
     }
     finally {
     }
-    //await browser.close();
 };
-/*function checkDateInRange(dateListing: Date): boolean {
-  if (args.debug == "TRUE") {
-    console.info(date.subtract(rangeTop, dateListing).toHours());
-    console.info(date.subtract(dateListing, rangeBottom).toHours());
-  }
-  if (
-    date.subtract(rangeTop, dateListing).toHours() >= 0 &&
-    date.subtract(dateListing, rangeBottom).toHours() >= 0
-  ) {
-    return true;
-  } else {
-    return false;
-  }
-}*/
 function formatDateRanges(rangeBottom, rangeTop) {
     let newBottomDate = rangeBottom;
     //date selector logic

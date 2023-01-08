@@ -137,8 +137,6 @@ const browserargs = {
 
 rangeBottom = formatDateRanges(rangeBottom, rangeTop);
 
-let informationRecieved: boolean = false;
-
 const startBot = async () => {
   console.log("STARTING BOT");
   try {
@@ -185,7 +183,7 @@ const startBot = async () => {
       if (requestPostData != undefined) {
         if (requestPostData.includes("search=1")) {
           //marker for booking list search
-          informationRecieved = true;
+          newTimesInfoCallback();
         }
       }
     });
@@ -246,18 +244,54 @@ const startBot = async () => {
       });
     }, locations);
 
-    const repeater = setInterval(async () => {
+    async function newTimesInfoCallback() {
+      const times: ElementHandle<Element>[] = await page.$$("#searchResultRadioLabel"); //list of elements containing dates needed
+
+      if (times.length != 0 && isBooked == false) {
+        const dateTextProms: Promise<string>[] = times.map(async (element) => {
+          // retrieves text form of dates from all html elements
+          return page.evaluate((el: any) => el.innerText, element); //this is a promise
+        });
+
+        const dateText: Array<string> = await Promise.all(dateTextProms);
+
+        isBooked = true;
+
+        bookDate(dateText);
+        return;
+      }
+
+      await delay(pollingRate);
+
       const searchButton = await page.$$('[title="Search"]');
       if (searchButton.length === 0) {
         //session has expired
-        await page.close();
+        await browser.close();
+        console.log("Session ended, restarting.");
+        startBot(); //starts a new bot instance
+        return;
+      }
+
+      await searchButton[0].click().catch((e) => {
+        console.log(e);
+        browser.close();
+        console.log("Session ended, restarting.");
+        startBot(); //starts a new bot instance
+        return;
+      }); //clicks button to get server to refresh information
+    }
+
+    /*const repeater = setInterval(async () => {
+      let searchButton = await page.$$('[title="Search"]');
+      console.log(searchButton);
+      if (searchButton.length === 0) {
+        //session has expired
         await browser.close();
         console.log("Session ended, restarting.");
         startBot(); //starts a new bot instance
         clearInterval(repeater);
         return;
       }
-
       await searchButton[0].click().catch((e) => {
         console.log(e);
         browser.close();
@@ -267,14 +301,19 @@ const startBot = async () => {
         return;
       }); //clicks button to get server to refresh information
 
-      /*await new Promise((r) => setTimeout(r, 1000)).then(() => {
-        //waits for information to reach client
-        page.evaluate(() => document.querySelector("*")?.outerHTML); //gets  html from document
-      });*/
-
       await delay(1000); //waits for booking info to reach client
 
       while (isBooked == false) {
+        searchButton = await page.$$('[title="Search"]');
+        if (searchButton.length === 0) {
+          //session has expired
+          await browser.close();
+          console.log("Session ended, restarting.");
+          startBot(); //starts a new bot instance
+          clearInterval(repeater);
+          break;
+        }
+
         if (informationRecieved == true) {
           //checks if information has reached client
           const times: ElementHandle<Element>[] = await page.$$("#searchResultRadioLabel"); //list of elements containing dates needed
@@ -320,8 +359,8 @@ const startBot = async () => {
             return false;
           }
         }
-      });*/
-    }, pollingRate);
+      });
+    }, pollingRate);*/
 
     function bookDate(dateText: Array<string>) {
       page
@@ -343,29 +382,28 @@ const startBot = async () => {
           console.error(e);
         });
     }
+    const searchButton = await page.$$('[title="Search"]');
+    if (searchButton.length === 0) {
+      //session has expired
+      await browser.close();
+      console.log("Session ended, restarting.");
+      startBot(); //starts a new bot instance
+      return;
+    }
+    await searchButton[0].click().catch((e) => {
+      console.log(e);
+      browser.close();
+      console.log("Session ended, restarting.");
+      startBot(); //starts a new bot instance
+      return;
+    }); //clicks button to get server to refresh information
   } catch (e) {
     console.error(e);
     console.log("ERROR");
-    //clearInterval(infoRepeater)
+    startBot();
   } finally {
   }
-  //await browser.close();
 };
-
-/*function checkDateInRange(dateListing: Date): boolean {
-  if (args.debug == "TRUE") {
-    console.info(date.subtract(rangeTop, dateListing).toHours());
-    console.info(date.subtract(dateListing, rangeBottom).toHours());
-  }
-  if (
-    date.subtract(rangeTop, dateListing).toHours() >= 0 &&
-    date.subtract(dateListing, rangeBottom).toHours() >= 0
-  ) {
-    return true;
-  } else {
-    return false;
-  }
-}*/
 
 function formatDateRanges(rangeBottom: Date, rangeTop: Date): Date {
   let newBottomDate: Date = rangeBottom;
