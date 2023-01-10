@@ -139,150 +139,149 @@ rangeBottom = formatDateRanges(rangeBottom, rangeTop);
 
 const startBot = async () => {
   console.log("STARTING BOT");
-  try {
-    const browser = await puppeteer.launch(browserargs);
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1366, height: 768 });
-    await page.goto("https://online.transport.wa.gov.au/pdabooking/manage/?3").catch((err: any) => {
-      if (err.toString().includes("net::ERR_INTERNET_DISCONNECTED")) {
-        console.error("INTERNET NOT CONNECTED");
-        browser.close();
-        process.exit();
-      }
-    });
-
-    await page.setRequestInterception(true);
-
-    page.on("request", (request) => {
-      //method to intercept and edit authorisation requests
-      const method = request.method();
-      if (method == "POST") {
-        const postData = request.postData();
-        if (postData != undefined) {
-          if (postData.includes("id4_hf_0")) {
-            //checks for string unique to login auth form
-            /**?
-             * Edits form to include g-recaptcha-response token
-             */
-            let postDataFinal: string = postData.replace(
-              "&continue=1",
-              "&g-recaptcha-response=" + GCaptchaResponse,
-            );
-            postDataFinal = postDataFinal.concat("&continue=1");
-            request.continue({ postData: postDataFinal }); //injects postData with new form data
-            return;
-          }
-        }
-      }
-      request.continue();
-    });
-
-    page.on("response", (response: HTTPResponse) => {
-      //have to use text as the pda website is so old it uses xml instead of json
-      const requestPostData = response.request().postData();
-      if (requestPostData != undefined) {
-        if (requestPostData.includes("search=1")) {
-          //marker for booking list search
-          newTimesInfoCallback();
-        }
-      }
-    });
-
-    const { solutions, error } = await page.solveRecaptchas(); //solves recaptchas and returns a solution/errors
-    if (error != undefined) {
-      console.error("RECAPTCHA ERROR");
-      throw error;
+  const browser = await puppeteer.launch(browserargs);
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1366, height: 768 });
+  await page.goto("https://online.transport.wa.gov.au/pdabooking/manage/?3").catch((err: any) => {
+    if (err.toString().includes("net::ERR_INTERNET_DISCONNECTED")) {
+      console.error("INTERNET NOT CONNECTED");
+      browser.close();
+      process.exit();
     }
-    const solution = solutions[0].text;
-    if (solution != undefined) {
-      GCaptchaResponse = solution;
-    }
+  });
 
-    //Types in user info
-    await page.type('[name="clientDetailsPanel:licenceNumber"]', userInfo.licenceNumber);
-    await page.type("#licenceExpiryDatePicker", userInfo.expiryDate);
-    await page.type('[name="clientDetailsPanel:firstName"]', userInfo.firstName);
-    await page.type('[name="clientDetailsPanel:lastName"]', userInfo.lastName);
-    await page.type("#dateOfBirthPicker", userInfo.dateOfBirth);
+  await page.setRequestInterception(true);
 
-    //clicks page and waits for navigation
-    await Promise.all([
-      page.waitForNavigation(),
-      page.click('[title="Submit the details and continue to the next page"]'),
-    ]);
-
-    //Checks if page has navigated
-    const pageNavCheck = await page.$$('[name="clientDetailsPanel:licenceNumber"]');
-    console.log("Logged in successfully");
-    if (pageNavCheck.length != 0) {
-      console.error("USER DETAILS INCORRECT");
-      return;
-    }
-
-    if (isRegional) {
-      await page.click('[value="REGIONAL"]'); //clicks regional radio button
-    }
-
-    await delay(1000);
-
-    //types upper and lower dates for booking
-    await page.type("#fromDateInput", date.format(rangeBottom, "DD/MM/YYYY"));
-
-    await delay(1000);
-
-    await page.type("#toDateInput", date.format(rangeTop, "DD/MM/YYYY"));
-
-    await delay(1000);
-
-    //Selects locations to look for
-    await page.evaluateHandle((locations) => {
-      locations.forEach((loc) => {
-        if (loc != undefined) {
-          const doc = document.querySelector(`[value=${loc}]`) as HTMLElement;
-          doc.click();
-        }
-      });
-    }, locations);
-
-    async function newTimesInfoCallback() {
-      try {
-        const times: ElementHandle<Element>[] = await page.$$("#searchResultRadioLabel"); //list of elements containing dates needed
-
-        if (times.length != 0 && isBooked == false) {
-          const dateTextProms: Promise<string>[] = times.map(async (element) => {
-            // retrieves text form of dates from all html elements
-            return page.evaluate((el: any) => el.innerText, element); //this is a promise
-          });
-
-          const dateText: Array<string> = await Promise.all(dateTextProms);
-
-          isBooked = true;
-
-          bookDate(dateText);
+  page.on("request", (request) => {
+    //method to intercept and edit authorisation requests
+    const method = request.method();
+    if (method == "POST") {
+      const postData = request.postData();
+      if (postData != undefined) {
+        if (postData.includes("id4_hf_0")) {
+          //checks for string unique to login auth form
+          /**?
+           * Edits form to include g-recaptcha-response token
+           */
+          let postDataFinal: string = postData.replace(
+            "&continue=1",
+            "&g-recaptcha-response=" + GCaptchaResponse,
+          );
+          postDataFinal = postDataFinal.concat("&continue=1");
+          request.continue({ postData: postDataFinal }); //injects postData with new form data
           return;
         }
+      }
+    }
+    request.continue();
+  });
 
-        await delay(pollingRate);
+  page.on("response", (response: HTTPResponse) => {
+    //have to use text as the pda website is so old it uses xml instead of json
+    const requestPostData = response.request().postData();
+    if (requestPostData != undefined) {
+      if (requestPostData.includes("search=1")) {
+        //marker for booking list search
+        newTimesInfoCallback();
+      }
+    }
+  });
 
-        const searchButton = await page.$$('[title="Search"]');
-        if (searchButton.length === 0) {
-          //session has expired
-          await browser.close();
-          console.log("Session ended, restarting.");
-          startBot(); //starts a new bot instance
-          return;
-        }
+  const { solutions, error } = await page.solveRecaptchas(); //solves recaptchas and returns a solution/errors
+  if (error != undefined) {
+    console.error("RECAPTCHA ERROR");
+    throw error;
+  }
+  const solution = solutions[0].text;
+  if (solution != undefined) {
+    GCaptchaResponse = solution;
+  }
 
-        await searchButton[0].click();
-      } catch (e) {
-        console.log(e);
-        browser.close();
-        startBot();
+  //Types in user info
+  await page.type('[name="clientDetailsPanel:licenceNumber"]', userInfo.licenceNumber);
+  await page.type("#licenceExpiryDatePicker", userInfo.expiryDate);
+  await page.type('[name="clientDetailsPanel:firstName"]', userInfo.firstName);
+  await page.type('[name="clientDetailsPanel:lastName"]', userInfo.lastName);
+  await page.type("#dateOfBirthPicker", userInfo.dateOfBirth);
+
+  //clicks page and waits for navigation
+  await Promise.all([
+    page.waitForNavigation(),
+    page.click('[title="Submit the details and continue to the next page"]'),
+  ]);
+
+  //Checks if page has navigated
+  const pageNavCheck = await page.$$('[name="clientDetailsPanel:licenceNumber"]');
+  console.log("Logged in successfully");
+  if (pageNavCheck.length != 0) {
+    console.error("USER DETAILS INCORRECT");
+    return;
+  }
+
+  if (isRegional) {
+    await page.click('[value="REGIONAL"]'); //clicks regional radio button
+  }
+
+  await delay(1000);
+
+  //types upper and lower dates for booking
+  await page.type("#fromDateInput", date.format(rangeBottom, "DD/MM/YYYY"));
+
+  await delay(1000);
+
+  await page.type("#toDateInput", date.format(rangeTop, "DD/MM/YYYY"));
+
+  await delay(1000);
+
+  //Selects locations to look for
+  await page.evaluateHandle((locations) => {
+    locations.forEach((loc) => {
+      if (loc != undefined) {
+        const doc = document.querySelector(`[value=${loc}]`) as HTMLElement;
+        doc.click();
+      }
+    });
+  }, locations);
+
+  async function newTimesInfoCallback() {
+    try {
+      const times: ElementHandle<Element>[] = await page.$$("#searchResultRadioLabel"); //list of elements containing dates needed
+
+      if (times.length != 0 && isBooked == false) {
+        const dateTextProms: Promise<string>[] = times.map(async (element) => {
+          // retrieves text form of dates from all html elements
+          return page.evaluate((el: any) => el.innerText, element); //this is a promise
+        });
+
+        const dateText: Array<string> = await Promise.all(dateTextProms);
+
+        isBooked = true;
+
+        bookDate(dateText);
         return;
       }
-    }
 
-    /*const repeater = setInterval(async () => {
+      await delay(pollingRate);
+
+      const searchButton = await page.$$('[title="Search"]');
+      if (searchButton.length === 0) {
+        //session has expired
+        await browser.close();
+        console.log("Session ended, restarting.");
+        startBot(); //starts a new bot instance
+        return;
+      }
+
+      await searchButton[0].click();
+    } catch (e) {
+      console.log(e);
+      browser.close();
+      startBot();
+      return;
+    }
+  }
+
+  /*const repeater = setInterval(async () => {
       let searchButton = await page.$$('[title="Search"]');
       console.log(searchButton);
       if (searchButton.length === 0) {
@@ -363,26 +362,25 @@ const startBot = async () => {
       });
     }, pollingRate);*/
 
-    function bookDate(dateText: Array<string>) {
-      page
-        .click(`#searchResultRadio0`)
-        .then(() =>
-          Promise.all([page.waitForNavigation(), page.click('[value="Confirm booking"]')]),
-        )
-        .then(() => Promise.all([page.waitForNavigation(), page.click('[value="Finish"]')]))
-        .then(() => {
-          console.log("FOUND BOOKING!");
-          console.log(dateText[0]);
-          return delay(10000);
-        })
-        .then(() => {
-          browser.close();
-        })
-        .catch((e) => {
-          console.log("Error booking date");
-          console.error(e);
-        });
-    }
+  function bookDate(dateText: Array<string>) {
+    page
+      .click(`#searchResultRadio0`)
+      .then(() => Promise.all([page.waitForNavigation(), page.click('[value="Confirm booking"]')]))
+      .then(() => Promise.all([page.waitForNavigation(), page.click('[value="Finish"]')]))
+      .then(() => {
+        console.log("FOUND BOOKING!");
+        console.log(dateText[0]);
+        return delay(10000);
+      })
+      .then(() => {
+        browser.close();
+      })
+      .catch((e) => {
+        console.log("Error booking date");
+        console.error(e);
+      });
+  }
+  try {
     const searchButton = await page.$$('[title="Search"]');
     if (searchButton.length === 0) {
       //session has expired
@@ -393,10 +391,10 @@ const startBot = async () => {
     }
     await searchButton[0].click();
   } catch (e) {
-    console.error(e);
-    console.log("ERROR");
+    console.log(e);
+    console.log("ERROR during pressing search button");
+    await browser.close();
     startBot();
-  } finally {
   }
 };
 
