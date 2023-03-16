@@ -182,6 +182,10 @@ const startBot = async () => {
         console.error("USER DETAILS INCORRECT");
         return;
     }
+    const testTypeContainer = await page.$$('[name="searchBookingContainer:testType"]');
+    if (testTypeContainer.length != 0) {
+        await page.select('[name="searchBookingContainer:testType"]', "C");
+    }
     if (isRegional) {
         await page.click('[value="REGIONAL"]'); //clicks regional radio button
     }
