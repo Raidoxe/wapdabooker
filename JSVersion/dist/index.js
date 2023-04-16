@@ -207,6 +207,20 @@ const startBot = async () => {
     async function newTimesInfoCallback() {
         try {
             const times = await page.$$("#searchResultRadioLabel"); //list of elements containing dates needed
+            const errors = await page.$$("span.feedbackPanelERROR"); //error messages that show at the top of the screen
+            if (errors.length > 0) {
+                const errorMessages = await Promise.all(errors.map(async (element) => {
+                    return page.evaluate((el) => el.innerText, element); //extracts error message text
+                }));
+                for (let i = 0; i < errorMessages.length; i++) {
+                    if (errorMessages[i].includes("limit of searches")) {
+                        //checks if user has maxed out their searches
+                        const currentDate = new Date();
+                        console.error(`Out of searches... exiting. Time ${currentDate.toString()}`);
+                        process.exit(0);
+                    }
+                }
+            }
             if (times.length != 0 && isBooked == false) {
                 const dateTextProms = times.map(async (element) => {
                     // retrieves text form of dates from all html elements

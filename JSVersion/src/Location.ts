@@ -100,4 +100,5 @@ export type Location =
   | "WYCO"
   | "WYNO"
   | "YLGO"
-  | "YORO";
+  | "YORO"
+  | "ANY";
