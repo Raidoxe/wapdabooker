@@ -261,7 +261,7 @@ const startBot = async () => {
         );
 
         for (let i = 0; i < errorMessages.length; i++) {
-          if (errorMessages[i].includes("limit of searches")) {
+          if (errorMessages[i].includes("search limit")) {
             //checks if user has maxed out their searches
             const currentDate = new Date();
             console.error(`Out of searches... exiting. Time ${currentDate.toString()}`);
