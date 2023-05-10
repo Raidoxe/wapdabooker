@@ -1,0 +1,15 @@
+{
+  "devDependencies": {
+    "@types/node": "^18.15.11"
+  },
+  "dependencies": {
+    "date-and-time": "^2.4.3",
+    "dotenv": "^16.0.3",
+    "mongodb": "^5.2.0",
+    "playwright-core": "^1.32.3",
+    "prompt-sync": "^4.2.0",
+    "puppeteer": "^19.9.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-recaptcha": "^3.6.8"
+  }
+}

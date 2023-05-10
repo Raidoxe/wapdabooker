@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "sourceMap": true,
+    "declaration": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false,
+    "pretty": true,
+    "stripInternal": true,
+    "types": ["node"]
+  },
+  "include": [
+    "./src/**/*.tsx",
+    "./src/**/*.ts",
+    "./node_modules/puppeteer-extra/*.d.ts",
+    "./node_modules/puppeteer-extra-*/*.d.ts",
+    "./src",
+    "./node_modules/@types/puppeteer/index.d.ts",
+    "./src/typings/puppeteer.ts"
+  ],
+  "exclude": ["node_modules", "dist", "./test/**/*.spec.ts"]
+}
