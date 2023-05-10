@@ -2,6 +2,10 @@ import InstanceManger from "./InstanceManager";
 import { MongoClient } from "mongodb";
 require("dotenv").config();
 
+const yargs = require("yargs/yargs");
+const { hideBin } = require("yargs/helpers");
+const args = yargs(hideBin(process.argv));
+
 async function run() {
   //initialize database
   const uri = process.env.DB_CONNECTION_STRING;
